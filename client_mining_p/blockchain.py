@@ -124,7 +124,9 @@ blockchain = Blockchain()
 @app.route('/mine', methods=['POST'])
 def mine():
     values = request.get_json()
+    # subbmited_proof = values["proof"]
     proof = values.get('proof')
+    # last block string
     block_string = json.dumps(blockchain.last_block, sort_keys=True).encode()
 
     # We run the proof of work algorithm to get the next proof...
@@ -152,7 +154,7 @@ def mine():
         response = {
             'message': "Invalid proof",
         }
-        return jsonify(response), 400
+        return jsonify(response), 400  # 200 expected behavior
 
 
 @app.route('/transactions/new', methods=['POST'])
@@ -182,11 +184,10 @@ def full_chain():
 # last_block = blockchain.last_block()
 # print(last_block["proof"])
 
-
+# get last block
 @app.route('/lastproof', methods=['GET'])
 def last_proof():
     last_block = blockchain.last_block  # last block is dictionary
-    # last_block["proof"]
     response = {
         "proof": last_block
     }

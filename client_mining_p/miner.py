@@ -8,6 +8,7 @@ import sys
 def get_last_proof():
 
     response = requests.get("http://localhost:5000/lastproof")
+    # response = requests.get(url=node + "/lastproof")
     last_proof = response.json()
     return last_proof["proof"]
 
