@@ -3,10 +3,11 @@ import requests
 import json
 import sys
 from uuid import uuid4
-​
 
 
+# TODO: Implement functionality to search for a proof
 def get_last_proof():
+
     response = requests.get("http://localhost:5000/last_block")
     # response = requests.get(url=node + "/lastproof")
     last_proof = response.json()
@@ -43,9 +44,11 @@ def valid_proof(block_string, proof):
 
 
 def get_id():
+     # Load or create ID
     try:
         f = open("my_id.txt", "r")
         id = f.read()
+        print("ID is", id)
         if id:
             f.close()
             return id
@@ -58,9 +61,8 @@ def get_id():
         return id
 
 
-​
-​
 recipient_id = get_id()
+
 
 if __name__ == '__main__':
     # What node are we interacting with?
@@ -68,15 +70,24 @@ if __name__ == '__main__':
         node = sys.argv[1]
     else:
         node = "http://localhost:5000"
-    ​
+
     coins_mined = 0
     # # Run forever until interrupted
     while True:
+        # TODO: Get the last proof from the server and look for a new one
         last_proof = get_last_proof()
         print("Start mining the proof")
+
         found_proof = proof_of_work(last_proof)
         print("Finished mining the proof")
         res_message = create_new_block(found_proof, recipient_id)
+        print(res_message)
+        # TODO: When found, POST it to the server {"proof": new_proof}
+        # TODO: We're going to have to research how to do a POST in Python
+        # HINT: Research `requests` and remember we're sending our data as JSON
+        # TODO: If the server responds with 'New Block Forged'
+        # add 1 to the number of coins mined and print it.  Otherwise,
+        # print the message from the server.
         if res_message == "New Block Forged":
             coins_mined += 1
             print(res_message)
