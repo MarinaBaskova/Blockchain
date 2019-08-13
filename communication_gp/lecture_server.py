@@ -1,7 +1,3 @@
-# Paste your version of blockchain.py from the communication_gp
-# folder here
-# Paste your version of blockchain.py from the communication_gp
-# folder here
 import hashlib
 import json
 from time import time
@@ -193,7 +189,6 @@ class Blockchain(object):
         for node in neighbours:
             response = requests.post(f'http://{node}/block/new',
                                      json=post_data)
-
             if response.status_code != 200:
                 # Error handling
                 pass
@@ -209,36 +204,26 @@ blockchain = Blockchain()
 
 @app.route('/mine', methods=['POST'])
 def mine():
-
+    # Determine if proof is valid
+    last_block = blockchain.last_block
+    last_proof = last_block['proof']
     values = request.get_json()
-    # subbmited_proof = values["proof"]
-    proof = values.get('proof')
-    # last block string
-    block_string = json.dumps(blockchain.last_block, sort_keys=True).encode()
+    submitted_proof = values.get('proof')
 
-    # We run the proof of work algorithm to get the next proof...
-    valid_proof = blockchain.valid_proof(block_string, proof)
-    recipient_id = values.get('recipient_id')
-
-    # Check that the required fields are in the POST'ed data
-    required = ['proof', 'recipient_id']
-    if not all(k in values for k in required):
-        return 'Missing Values', 400
-
-    # print(submitted_proof, recipient_id)
-
-    if valid_proof:
+    if blockchain.valid_proof(last_proof, submitted_proof):
         # We must receive a reward for finding the proof.
         # The sender is "0" to signify that this node has mine a new coin
         blockchain.new_transaction(
-            sender=node_identifier,
-            recipient=recipient_id,
+            sender="0",
+            recipient=node_identifier,
             amount=1,
         )
         # Forge the new Block by adding it to the chain
-        # Forge the new BLock by adding it to the chain
-        previous_hash = blockchain.hash(blockchain.last_block)
-        block = blockchain.new_block(proof, previous_hash)
+        previous_hash = blockchain.hash(last_block)
+        # print('Hash is: ' + str(previous_hash), file=sys.stderr)
+        block = blockchain.new_block(submitted_proof, previous_hash)
+        # Broadcast the new block
+        blockchain.broadcast_new_block(block)
         response = {
             'message': "New Block Forged",
             'index': block['index'],
@@ -311,9 +296,9 @@ def full_chain():
     return jsonify(response), 200
 
 
-@app.route('/last_block', methods=['GET'])
+@app.route('/last_proof', methods=['GET'])
 def last_proof():
-    last_proof_value = blockchain.last_block
+    last_proof_value = blockchain.last_block.get('proof')
     response = {
         'proof': last_proof_value
     }
